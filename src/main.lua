@@ -2,6 +2,8 @@
 local SpaceShipClass = require('SpaceShip')
 local AsteroidClass = require('Asteroid')
 local StarfieldClass = require('Starfield')
+local TirsClass = require('Tirs')
+
 
 -- tabs of classes (usually to create multiple sprites --
 local Asteroids = {}
@@ -47,8 +49,10 @@ end
 
 function love.update(dt)
   Space:gravity(gravity, dt)
+  Space:shot()
   Space:collision()
   Space:move(dt)
+  Space:shot()
 end
 
 function love.draw()
@@ -60,5 +64,13 @@ end
 function love.keypressed(key)
   if (key == 'escape') then
     love.event.quit()
+  end
+  if (key == ' ') then
+    local newTirs = TirsClass.new()
+    newTirs.vy = 10 * math.sin(math.rad(Space.angle))
+    newTirs.vx = 10 * math.cos(math.rad(Space.angle))
+    newTirs.x = Space.x - Space.img:getWidth() / 2
+    newTirs.y = Space.y - (Space.img:getHeight() * 2) / 2
+    table.insert(Space.tirs, newTirs)
   end
 end
