@@ -9,22 +9,58 @@ function ClassSpaceShip.new()
   newSpaceShip.y = love.graphics.getHeight() / 2
   newSpaceShip.vx = 0
   newSpaceShip.vy = 0
-  newSpaceShip.angle = 90
-  newSpaceShip.speed = 2
+  newSpaceShip.angle = 1
+  newSpaceShip.speed = 3
+  newSpaceShip.On = false
   newSpaceShip.img = love.graphics.newImage("media/Sprites/ship.png")
   newSpaceShip.imgEngine = love.graphics.newImage("media/Sprites/engine.png")
   
   return setmetatable(newSpaceShip, mt_SpaceShip)
 end
 
-function ClassSpaceShip:move()
+function ClassSpaceShip:applyInertie(dt)
+  local angle_radian = math.rad(self.angle)
+  local force_x = math.cos(angle_radian) * (self.speed * dt)
+  local force_y = math.sin(angle_radian) * (self.speed * dt)
+  self.vx = self.vx + force_x
+  self.vy = self.vy + force_y
+end
+
+function ClassSpaceShip:gravity(grav, dt)
+  self.vy = self.vy + (grav * dt)
+  self.x = self.x + self.vx
+  self.y = self.y + self.vy
+end
+
+function ClassSpaceShip:move(dt)
   if (love.keyboard.isDown('up')) then
-      self.y = self.y + self.speed
+      self:applyInertie(dt)
+      self.On = true
+    else
+      self.On = false
+  end
+  if (love.keyboard.isDown('left')) then 
+    self.angle = self.angle - (90 * dt)    
+  end
+  if (love.keyboard.isDown('right')) then
+    self.angle = self.angle + (90 * dt)    
+  end
+end
+
+function ClassSpaceShip:collision()
+  if (self.x < 0 or self.x > love.graphics.getWidth()) then
+    love.event.quit()
+  end
+  if (self.y < 0 or self.y > love.graphics.getHeight()) then
+    love.event.quit()
   end
 end
 
 function ClassSpaceShip:drawSprite()
-  love.graphics.draw(self.img, self.x, self.y)
+  love.graphics.draw(self.img, self.x, self.y, math.rad(self.angle), 2, 2, self.img:getWidth() / 2, self.img:getHeight() / 2)
+  if (self.On == true) then
+    love.graphics.draw(self.imgEngine, self.x, self.y, math.rad(self.angle), 2, 2, self.imgEngine:getWidth() / 2, self.imgEngine:getHeight() / 2)
+  end
 end
 
 return ClassSpaceShip

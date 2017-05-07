@@ -1,15 +1,20 @@
 -- classes called --
 local SpaceShipClass = require('SpaceShip')
 local AsteroidClass = require('Asteroid')
+local StarfieldClass = require('Starfield')
 
 -- tabs of classes (usually to create multiple sprites --
 local Asteroids = {}
 local nbrAst = 10
 
 local Space = SpaceShipClass.new()
+local Background = StarfieldClass.new()
+
+-- variable usefull
 
 local Width = love.graphics.getWidth()
 local Height = love.graphics.getHeight()
+local gravity = 0.6
 
 -- manage sprites
 
@@ -36,14 +41,18 @@ function love.load()
   local icon = love.image.newImageData("media/Sprites/icon.png")
   love.window.setIcon(icon)
   love.window.setTitle("Space Game")
+  Background:createStars()
   Asteroids = createSprites(AsteroidClass, nbrAst)
 end
 
 function love.update(dt)
-  Space:move()
+  Space:gravity(gravity, dt)
+  Space:collision()
+  Space:move(dt)
 end
 
 function love.draw()
+  Background:drawSprite()
   Space:drawSprite()
   drawSprites(Asteroids, nbrAst)
 end
