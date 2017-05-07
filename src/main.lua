@@ -9,8 +9,8 @@ local TirsClass = require('Tirs')
 local Asteroids = {}
 local nbrAst = 10
 
-local Space = SpaceShipClass.new()
-local Background = StarfieldClass.new()
+local Space
+local Background
 
 -- variable usefull
 
@@ -19,6 +19,27 @@ local Height = love.graphics.getHeight()
 local gravity = 0.6
 
 -- manage sprites
+
+function initGame()
+  Background = StarfieldClass.new()   
+  Space = SpaceShipClass.new()
+  Background:createStars()
+  Asteroids = createSprites(AsteroidClass, nbrAst)
+end
+
+function collisionHandler(ClassA, ClassB)
+  if (ClassA == ClassB) then
+    return false
+  end
+  local dx = ClassA.x - ClassB.x
+  local dy = ClassA.y - ClassB.y
+  if (math.abs(dx) < ClassA.img:getWidth() + ClassB.img:getWidth() / 10) then
+      if (math.abs(dy) < ClassA.img:getHeight() + ClassB.img:getHeight() / 10) then
+          return true
+      end
+  end
+  return false
+end
 
 function createSprites(Class, nbrSprites)
   math.randomseed(os.time())
@@ -43,16 +64,20 @@ function love.load()
   local icon = love.image.newImageData("media/Sprites/icon.png")
   love.window.setIcon(icon)
   love.window.setTitle("Space Game")
-  Background:createStars()
-  Asteroids = createSprites(AsteroidClass, nbrAst)
+  initGame()
 end
 
 function love.update(dt)
-  Space:gravity(gravity, dt)
-  Space:shot()
-  Space:collision()
-  Space:move(dt)
-  Space:shot()
+  if (Space.dead == false) then
+    Space:gravity(gravity, dt)
+    Space:shot()
+    Space:move(dt)
+    Space:shot()
+    for i=1, #Asteroids do
+      bool = collisionHandler(Space, Asteroids[i])
+      --Space:collision(bool)
+    end
+  end
 end
 
 function love.draw()
@@ -72,5 +97,6 @@ function love.keypressed(key)
     newTirs.x = Space.x - Space.img:getWidth() / 2
     newTirs.y = Space.y - (Space.img:getHeight() * 2) / 2
     table.insert(Space.tirs, newTirs)
+    love.audio.play(Space.laserSound)
   end
 end

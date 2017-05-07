@@ -16,6 +16,8 @@ function ClassSpaceShip.new()
   newSpaceShip.speed = 3
   newSpaceShip.On = false
   newSpaceShip.tirs = {}
+  newSpaceShip.laserSound = love.audio.newSource("media/Sounds/shot.wav", "static")
+  newSpaceShip.dead = false
   newSpaceShip.img = love.graphics.newImage("media/Sprites/ship.png")
   newSpaceShip.imgEngine = love.graphics.newImage("media/Sprites/engine.png")
   
@@ -57,12 +59,15 @@ function ClassSpaceShip:move(dt)
   end
 end
 
-function ClassSpaceShip:collision()
+function ClassSpaceShip:collision(bool)
   if (self.x < 0 or self.x > love.graphics.getWidth()) then
-    love.event.quit()
+    self.dead = true
   end
   if (self.y < 0 or self.y > love.graphics.getHeight()) then
-    love.event.quit()
+    self.dead = true
+  end
+  if (bool == true) then
+    self.dead = true
   end
 end
 
@@ -77,12 +82,14 @@ function ClassSpaceShip:shot()
 end
 
 function ClassSpaceShip:drawSprite()
-  love.graphics.draw(self.img, self.x, self.y, math.rad(self.angle), 2, 2, self.img:getWidth() / 2, self.img:getHeight() / 2)
-  if (self.On == true) then
-    love.graphics.draw(self.imgEngine, self.x, self.y, math.rad(self.angle), 2, 2, self.imgEngine:getWidth() / 2, self.imgEngine:getHeight() / 2)
-  end
-  for i=1, #self.tirs do
-    love.graphics.draw(self.tirs[i].img, self.tirs[i].x, self.tirs[i].y)
+  if (self.dead == false) then
+    love.graphics.draw(self.img, self.x, self.y, math.rad(self.angle), 2, 2, self.img:getWidth() / 2, self.img:getHeight() / 2)
+    if (self.On == true) then
+      love.graphics.draw(self.imgEngine, self.x, self.y, math.rad(self.angle), 2, 2, self.imgEngine:getWidth() / 2, self.imgEngine:getHeight() / 2)
+    end
+    for i=1, #self.tirs do
+      love.graphics.draw(self.tirs[i].img, self.tirs[i].x, self.tirs[i].y)
+    end
   end
   love.graphics.print(tostring(self.angle))
 end
