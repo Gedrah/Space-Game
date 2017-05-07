@@ -3,6 +3,7 @@ local SpaceShipClass = require('SpaceShip')
 local AsteroidClass = require('Asteroid')
 local StarfieldClass = require('Starfield')
 local TirsClass = require('Tirs')
+local EnemyClass = require('Enemy')
 
 
 -- tabs of classes (usually to create multiple sprites --
@@ -11,6 +12,7 @@ local nbrAst = 10
 
 local Space
 local Background
+local Enemy
 
 -- variable usefull
 
@@ -23,6 +25,7 @@ local gravity = 0.6
 function initGame()
   Background = StarfieldClass.new()   
   Space = SpaceShipClass.new()
+  Enemy = EnemyClass.new()
   Background:createStars()
   Asteroids = createSprites(AsteroidClass, nbrAst)
 end
@@ -58,6 +61,16 @@ function drawSprites(ClassTab, nbrSprites)
   end
 end
 
+function createTirs(Class)
+    local newTirs = TirsClass.new()
+    newTirs.vy = 10 * math.sin(math.rad(Class.angle + 90))
+    newTirs.vx = 10 * math.cos(math.rad(Class.angle + 90))
+    newTirs.x = Class.x - Class.img:getWidth() / 2
+    newTirs.y = Class.y - (Class.img:getHeight() * 2) / 2
+    table.insert(Class.tirs, newTirs)
+    love.audio.play(Class.laserSound)
+end
+
 -- love functions (draw, load, update, key) --
 
 function love.load()
@@ -72,17 +85,30 @@ function love.update(dt)
     Space:gravity(gravity, dt)
     Space:shot()
     Space:move(dt)
-    Space:shot()
-    for i=1, #Asteroids do
-      bool = collisionHandler(Space, Asteroids[i])
-      --Space:collision(bool)
+    if (Enemy.delay > 40) then
+      Tirs = TirsClass.new()
+      createTirs(Enemy)
+      Enemy.delay = 0
     end
+    Enemy:move(dt)
+    Enemy:shot()
+    Space:shot()
+    for i=1, #Space.tirs do
+      local bool = collisionHandler(Space.tirs[i], Enemy)
+      Enemy:collision(bool)
+    end
+   -- for i=1, #Asteroids do
+     -- local bool1 = collisionHandler(Enemy, Asteroids[i])
+     -- Enemy:collision(bool1)
+     Enemy.delay = Enemy.delay + 1
+    --end
   end
 end
 
 function love.draw()
   Background:drawSprite()
   Space:drawSprite()
+  Enemy:drawSprite()
   drawSprites(Asteroids, nbrAst)
 end
 
