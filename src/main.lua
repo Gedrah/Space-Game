@@ -11,7 +11,7 @@ local Asteroids = {}
 local Enemies = {}
 
 local nbrAst = 10
-local nbrEnemies = 1
+local nbrEnemies = 2
 local SpawnDelay = 30
 
 local Space
@@ -27,12 +27,10 @@ local gravity = 0.6
 
 function initGame()
   math.randomseed(os.time())   
-  angle = math.random(180)
+  Enemies = createSprites(EnemyClass, nbrEnemies)
   Asteroids = createSprites(AsteroidClass, nbrAst)
   Background = StarfieldClass.new()   
   Space = SpaceShipClass.new()
-  Enemies = createSprites(AsteroidClass, nbrEnemies)
-  Background:createStars()
 end
 
 function collisionHandler(ClassA, ClassB)
@@ -49,27 +47,13 @@ function collisionHandler(ClassA, ClassB)
   return false
 end
 
-function createEnemy()
-  local Enemy = EnemyClass.new()
-  local angle = math.random(50, 150)
-  Enemy.x = math.random(Width - Enemy.img:getWidth())
-  Enemy.vx = math.cos(angle)
-  Enemy.vy = math.sin(angle)
-  Enemy.angle = angle - 90
-  return Enemy
-end
-
 function createSprites(Class, nbrSprites)
   math.randomseed(os.time())
   local newSpritesTab = {}
   for i=1, nbrSprites do
-    if (Class.name == "enemy") then
-        newSpritesTab[i] = createEnemy()
-    else
       newSpritesTab[i] = Class.new()
       newSpritesTab[i].x = math.random(Width - newSpritesTab[i].img:getWidth())
       newSpritesTab[i].y = math.random(Height - newSpritesTab[i].img:getHeight())
-    end  
   end
   return newSpritesTab
 end
@@ -88,6 +72,33 @@ function createTirs(Class)
     newTirs.y = Class.y - (Class.img:getHeight() * 2) / 2
     table.insert(Class.tirs, newTirs)
     love.audio.play(Class.laserSound)
+end
+
+function HandleEnemies(Class, nbr)
+    for i=#Enemies, 1, -1 do
+      Class[i].delay = Enemies[i].delay + 1
+      Class[i]:shot()  
+      Class[i]:move()
+      if (Class[i].delay > 80) then
+        local Tirs = TirsClass.new()
+        createTirs(Class[i])
+        Class[i].delay = 0
+      end
+      local bool = collisionHandler(Class[i], Space)
+      for j=#Class[i].tirs, 1, -1 do
+        local bool2 = collisionHandler(Space, Class[i].tirs[j])
+        if (bool2 == true) then
+          Space.dead = true
+        end
+      end
+      if (bool == true) then
+        Space.dead = true
+      end
+      if (Class[i]:collision() == true) then
+        table.remove(Class, i)
+        nbrEnemies = nbrEnemies - 1
+      end
+    end
 end
 
 -- love functions (draw, load, update, key) --
@@ -115,30 +126,15 @@ function love.update(dt)
       end
     end
     
+    --enemy actions --
+    HandleEnemies(Enemies, nbrEnemies)
+    
     -- spawner --
 
-    if (SpawnDelay > 30) then
-      table.insert(Enemies, createEnemy())
+    if (SpawnDelay > math.random(60, 100)) then
+      table.insert(Enemies, EnemyClass.new())
       nbrEnemies = nbrEnemies + 1
       SpawnDelay = 0
-    end
-    
-        --enemy actions --
-
-    
-    for i=1, #Enemies do
-      --Enemies[i]:move(dt)
-      --if (Enemies[i].delay > 40) then
-       -- Tirs = TirsClass.new()
-       -- createTirs(Enemies[i])
-       -- Enemies[i].delay = 0
-      --end
-      --if (Enemies:collision() == true) then
-       -- table.remove(Enemies, i)
-        --nbrEnemies = nbrEnemies - 1
-      --end
-      --Enemies[i].delay = Enemies[i].delay + 1
-      --Enemies[i]:shot()
     end
     
     SpawnDelay = SpawnDelay + 1

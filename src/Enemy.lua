@@ -8,18 +8,19 @@ local Height = love.graphics.getHeight()
 function ClassEnemy.new()
   local newEnemy = {}
   
+  local angle = math.random(50, 150)
   newEnemy.name = "enemy"
-  newEnemy.x = 500
+  newEnemy.img = love.graphics.newImage("media/Sprites/enemy1.png")
+  newEnemy.x = math.random(Width - newEnemy.img:getWidth())
   newEnemy.y = 0
-  newEnemy.vx = 2 * math.cos(math.rad(45))
-  newEnemy.vy = 2 * math.sin(math.rad(45))
-  newEnemy.angle = 45 - 90
+  newEnemy.vx = 2 * math.cos(math.rad(angle))
+  newEnemy.vy = 2 * math.sin(math.rad(angle))
+  newEnemy.angle = angle - 90
   newEnemy.tirs = {}
   newEnemy.dead = false
   newEnemy.delay = 0
   newEnemy.speed = 2
   newEnemy.laserSound = love.audio.newSource("media/Sounds/shot.wav", "static")
-  newEnemy.img = love.graphics.newImage("media/Sprites/enemy1.png")
   return setmetatable(newEnemy, enemy_mt)
 end
 
@@ -58,6 +59,10 @@ function ClassEnemy:drawSprite()
       love.graphics.draw(self.tirs[i].img, self.tirs[i].x, self.tirs[i].y)
     end
   end
+end
+
+function ClassEnemy:getName()
+  return self.name
 end
 
 return ClassEnemy
