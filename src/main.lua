@@ -4,6 +4,7 @@ local AsteroidClass = require('Asteroid')
 local StarfieldClass = require('Starfield')
 local TirsClass = require('Tirs')
 local EnemyClass = require('Enemy')
+local MenuClass = require('Menu')
 
 
 -- tabs of classes (usually to create multiple sprites --
@@ -16,6 +17,9 @@ local SpawnDelay = 30
 
 local Space
 local Background
+local Menu
+local Score = 0
+local Level = 0
 
 -- variable usefull
 
@@ -31,6 +35,8 @@ function initGame()
   Asteroids = createSprites(AsteroidClass, nbrAst)
   Background = StarfieldClass.new()   
   Space = SpaceShipClass.new()
+  love.audio.play(Menu.backgroundMusic)
+  Score = 0
 end
 
 function collisionHandler(ClassA, ClassB)
@@ -56,6 +62,12 @@ function createSprites(Class, nbrSprites)
       newSpritesTab[i].y = math.random(Height - newSpritesTab[i].img:getHeight())
   end
   return newSpritesTab
+end
+
+function destroySprites(Class, nbrSprites)
+  for i=#Class, 1, -1 do
+    table.remove(Class, i)
+  end
 end
 
 function drawSprites(ClassTab, nbrSprites)
@@ -101,27 +113,21 @@ function HandleEnemies(Class, nbr)
     end
 end
 
--- love functions (draw, load, update, key) --
-
-function love.load()
-  local icon = love.image.newImageData("media/Sprites/icon.png")
-  love.window.setIcon(icon)
-  love.window.setTitle("Space Game")
-  initGame()
-end
-
-function love.update(dt)
+function updateGame(dt)
   if (Space.dead == false) then
+    
     --player actions --
     Space:gravity(gravity, dt)
     Space:shot()
     Space:move(dt)
+    Space:collision()
     for i=1, #Space.tirs do
       for j=#Enemies, 1, -1 do
         local bool = collisionHandler(Space.tirs[i], Enemies[j])
         if (bool == true) then
           nbrEnemies = nbrEnemies - 1
           table.remove(Enemies, j)
+          Score = Score + 1
         end
       end
     end
@@ -130,7 +136,6 @@ function love.update(dt)
     HandleEnemies(Enemies, nbrEnemies)
     
     -- spawner --
-
     if (SpawnDelay > math.random(60, 100)) then
       table.insert(Enemies, EnemyClass.new())
       nbrEnemies = nbrEnemies + 1
@@ -138,28 +143,75 @@ function love.update(dt)
     end
     
     SpawnDelay = SpawnDelay + 1
+  else
+    Level = 2
+    Clear = true
+    love.audio.stop(Background.backgroundMusic)
+  end
+end
+
+-- love functions (draw, load, update, key) --
+
+function love.load()
+  local icon = love.image.newImageData("media/Sprites/icon.png")
+  love.window.setIcon(icon)
+  love.window.setTitle("Space Game")
+  Menu = MenuClass.new()
+  initGame()
+end
+
+
+function love.update(dt)
+  if (Level == 1) then
+    updateGame(dt)
+  end
+  if (Clear == true) then
+    destroySprites(Enemies)
+    destroySprites(Asteroids)
+    initGame()
+    love.audio.stop(Background.backgroundMusic)
+    Clear = false
   end
 end
 
 function love.draw()
-  Background:drawSprite()
-  Space:drawSprite()
-  drawSprites(Enemies, nbrEnemies)
-  drawSprites(Asteroids, nbrAst)
-  love.graphics.print("Nbr Enemies : "..tostring(nbrEnemies), 0, 50)
+  if (Level == 0) then
+    Menu:drawMenu()
+  elseif (Level == 1) then
+    Background:drawSprite()
+    Space:drawSprite()
+    drawSprites(Enemies, nbrEnemies)
+    drawSprites(Asteroids, nbrAst)
+    love.graphics.print("Score : "..tostring(Score), 0, 0)
+  else
+    Menu:drawGameOver()
+  end
 end
 
+
 function love.keypressed(key)
-  if (key == 'escape') then
-    love.event.quit()
+    if (key == 'escape') then
+      love.event.quit()
+    end
+   if (key == 'return') then
+    if (Level == 2) then
+      Level = 0
+      love.audio.stop(Background.backgroundMusic)
+    else
+      Level = 1
+      love.audio.stop(Menu.backgroundMusic)
+      love.audio.play(Background.backgroundMusic)
+    end
   end
-  if (key == ' ') then
-    local newTirs = TirsClass.new()
-    newTirs.vy = 10 * math.sin(math.rad(Space.angle))
-    newTirs.vx = 10 * math.cos(math.rad(Space.angle))
-    newTirs.x = Space.x - Space.img:getWidth() / 2
-    newTirs.y = Space.y - (Space.img:getHeight() * 2) / 2
-    table.insert(Space.tirs, newTirs)
-    love.audio.play(Space.laserSound)
+  if (Level == 1) then
+    if (key == ' ') then
+      local newTirs = TirsClass.new()
+      newTirs.vy = 10 * math.sin(math.rad(Space.angle))
+      newTirs.vx = 10 * math.cos(math.rad(Space.angle))
+      newTirs.x = Space.x - Space.img:getWidth() / 2
+      newTirs.y = Space.y - (Space.img:getHeight() * 2) / 2
+      table.insert(Space.tirs, newTirs)
+      love.audio.play(Space.laserSound)
+    end
   end
 end

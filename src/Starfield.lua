@@ -12,6 +12,7 @@ function ClassStarfield.new()
   newStarfield.center_x = love.graphics.getWidth()
   newStarfield.center_y = love.graphics.getHeight()
   newStarfield.background = love.graphics.newImage('media/Sprites/back.jpg')
+  newStarfield.backgroundMusic = love.audio.newSource('media/Sounds/110-stardust-road.mp3', "stream")
   return setmetatable(newStarfield, starfield_mt)
 end
 

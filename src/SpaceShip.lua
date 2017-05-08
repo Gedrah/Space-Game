@@ -91,7 +91,6 @@ function ClassSpaceShip:drawSprite()
       love.graphics.draw(self.tirs[i].img, self.tirs[i].x, self.tirs[i].y)
     end
   end
-  love.graphics.print(tostring(self.angle))
 end
 
 return ClassSpaceShip
