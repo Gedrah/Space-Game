@@ -19,6 +19,7 @@ local Space
 local Background
 local Menu
 local Score = 0
+local HighScore = 0
 local Level = 0
 
 -- variable usefull
@@ -168,6 +169,7 @@ function love.update(dt)
   if (Clear == true) then
     destroySprites(Enemies)
     destroySprites(Asteroids)
+    HighScore = Score
     initGame()
     love.audio.stop(Background.backgroundMusic)
     Clear = false
@@ -184,7 +186,7 @@ function love.draw()
     drawSprites(Asteroids, nbrAst)
     love.graphics.print("Score : "..tostring(Score), 0, 0)
   else
-    Menu:drawGameOver()
+    Menu:drawGameOver(HighScore)
   end
 end
 
