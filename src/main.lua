@@ -8,11 +8,14 @@ local EnemyClass = require('Enemy')
 
 -- tabs of classes (usually to create multiple sprites --
 local Asteroids = {}
+local Enemies = {}
+
 local nbrAst = 10
+local nbrEnemies = 1
+local SpawnDelay = 30
 
 local Space
 local Background
-local Enemy
 
 -- variable usefull
 
@@ -23,11 +26,13 @@ local gravity = 0.6
 -- manage sprites
 
 function initGame()
+  math.randomseed(os.time())   
+  angle = math.random(180)
+  Asteroids = createSprites(AsteroidClass, nbrAst)
   Background = StarfieldClass.new()   
   Space = SpaceShipClass.new()
-  Enemy = EnemyClass.new()
+  Enemies = createSprites(AsteroidClass, nbrEnemies)
   Background:createStars()
-  Asteroids = createSprites(AsteroidClass, nbrAst)
 end
 
 function collisionHandler(ClassA, ClassB)
@@ -44,13 +49,27 @@ function collisionHandler(ClassA, ClassB)
   return false
 end
 
+function createEnemy()
+  local Enemy = EnemyClass.new()
+  local angle = math.random(50, 150)
+  Enemy.x = math.random(Width - Enemy.img:getWidth())
+  Enemy.vx = math.cos(angle)
+  Enemy.vy = math.sin(angle)
+  Enemy.angle = angle - 90
+  return Enemy
+end
+
 function createSprites(Class, nbrSprites)
   math.randomseed(os.time())
   local newSpritesTab = {}
   for i=1, nbrSprites do
-    newSpritesTab[i] = Class.new()
-    newSpritesTab[i].x = math.random(Width - newSpritesTab[i].img:getWidth())
-    newSpritesTab[i].y = math.random(Height - newSpritesTab[i].img:getHeight())
+    if (Class.name == "enemy") then
+        newSpritesTab[i] = createEnemy()
+    else
+      newSpritesTab[i] = Class.new()
+      newSpritesTab[i].x = math.random(Width - newSpritesTab[i].img:getWidth())
+      newSpritesTab[i].y = math.random(Height - newSpritesTab[i].img:getHeight())
+    end  
   end
   return newSpritesTab
 end
@@ -82,34 +101,56 @@ end
 
 function love.update(dt)
   if (Space.dead == false) then
+    --player actions --
     Space:gravity(gravity, dt)
     Space:shot()
     Space:move(dt)
-    if (Enemy.delay > 40) then
-      Tirs = TirsClass.new()
-      createTirs(Enemy)
-      Enemy.delay = 0
-    end
-    Enemy:move(dt)
-    Enemy:shot()
-    Space:shot()
     for i=1, #Space.tirs do
-      local bool = collisionHandler(Space.tirs[i], Enemy)
-      Enemy:collision(bool)
+      for j=#Enemies, 1, -1 do
+        local bool = collisionHandler(Space.tirs[i], Enemies[j])
+        if (bool == true) then
+          nbrEnemies = nbrEnemies - 1
+          table.remove(Enemies, j)
+        end
+      end
     end
-   -- for i=1, #Asteroids do
-     -- local bool1 = collisionHandler(Enemy, Asteroids[i])
-     -- Enemy:collision(bool1)
-     Enemy.delay = Enemy.delay + 1
-    --end
+    
+    -- spawner --
+
+    if (SpawnDelay > 30) then
+      table.insert(Enemies, createEnemy())
+      nbrEnemies = nbrEnemies + 1
+      SpawnDelay = 0
+    end
+    
+        --enemy actions --
+
+    
+    for i=1, #Enemies do
+      --Enemies[i]:move(dt)
+      --if (Enemies[i].delay > 40) then
+       -- Tirs = TirsClass.new()
+       -- createTirs(Enemies[i])
+       -- Enemies[i].delay = 0
+      --end
+      --if (Enemies:collision() == true) then
+       -- table.remove(Enemies, i)
+        --nbrEnemies = nbrEnemies - 1
+      --end
+      --Enemies[i].delay = Enemies[i].delay + 1
+      --Enemies[i]:shot()
+    end
+    
+    SpawnDelay = SpawnDelay + 1
   end
 end
 
 function love.draw()
   Background:drawSprite()
   Space:drawSprite()
-  Enemy:drawSprite()
+  drawSprites(Enemies, nbrEnemies)
   drawSprites(Asteroids, nbrAst)
+  love.graphics.print("Nbr Enemies : "..tostring(nbrEnemies), 0, 50)
 end
 
 function love.keypressed(key)

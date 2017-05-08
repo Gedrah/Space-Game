@@ -6,13 +6,14 @@ local Width = love.graphics.getWidth()
 local Height = love.graphics.getHeight()
 
 function ClassEnemy.new()
-  newEnemy = {}
+  local newEnemy = {}
   
+  newEnemy.name = "enemy"
   newEnemy.x = 500
   newEnemy.y = 0
-  newEnemy.vx = 0
-  newEnemy.vy = 2
-  newEnemy.angle = 90
+  newEnemy.vx = 2 * math.cos(math.rad(45))
+  newEnemy.vy = 2 * math.sin(math.rad(45))
+  newEnemy.angle = 45 - 90
   newEnemy.tirs = {}
   newEnemy.dead = false
   newEnemy.delay = 0
@@ -27,16 +28,14 @@ function ClassEnemy:move(dt)
     self.x = self.x + self.vx
 end
 
-function ClassEnemy:collision(bool)
+function ClassEnemy:collision()
   if (self.x < 0 or self.x > love.graphics.getWidth()) then
-    self.dead = true
+    return true
   end
   if (self.y < 0 or self.y > love.graphics.getHeight()) then
-    self.dead = true
+    return true
   end
-  if (bool == true) then
-    self.dead = true
-  end
+  return false
 end
 
 function ClassEnemy:shot()
